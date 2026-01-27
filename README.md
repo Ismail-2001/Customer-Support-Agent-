@@ -85,12 +85,13 @@ The system follows a **Directed Acyclic Graph (DAG)** workflow:
 py -m uvicorn api:app --host 0.0.0.0 --port 8001 --reload
 ```
 
-**Start the Streamlit UI:**
+**Start the Analytics Dashboard:**
 ```bash
-py -m streamlit run app.py --server.port 8503
+py -m streamlit run dashboard.py --server.port 8504
 ```
 
 - **Chat Interface**: `http://localhost:8503`
+- **Analytics Dashboard**: `http://localhost:8504`
 - **Interactive API Docs**: `http://localhost:8001/docs`
 
 ---
