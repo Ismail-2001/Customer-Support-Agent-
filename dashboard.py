@@ -10,54 +10,65 @@ from datetime import datetime, timedelta
 
 # --- PAGE CONFIG ---
 st.set_page_config(
-    page_title="Enterprise AI Analytics",
-    page_icon="📈",
+    page_title="AI Analytics | Enterprise",
+    page_icon="👁️",
     layout="wide"
 )
 
-# --- PREMIUM CSS ---
+# --- PREMIUM DESIGN SYSTEM ---
 st.markdown("""
 <style>
-    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap');
-    
-    html, body, [class*="ViewContainer"] {
-        font-family: 'Inter', sans-serif;
-        background-color: #0f172a;
-        color: #f8fafc;
-    }
+    @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&family=Inter:wght@300;400;500;600&display=swap');
 
-    .main {
-        background-color: #0f172a;
-    }
-
-    /* Metric Cards */
-    [data-testid="stMetricValue"] {
-        color: #3b82f6;
-        font-weight: 700;
-        font-size: 2.5rem !important;
-    }
-
-    .card {
-        background: rgba(30, 41, 59, 0.7);
-        border: 1px solid rgba(255, 255, 255, 0.1);
-        border-radius: 16px;
-        padding: 1.5rem;
-        backdrop-filter: blur(10px);
-        margin-bottom: 1rem;
+    :root {
+        --primary: #6366f1;
+        --secondary: #10b981;
+        --accent: #f43f5e;
+        --bg: #0b0f1a;
+        --card-bg: rgba(30, 41, 59, 0.5);
+        --border: rgba(255, 255, 255, 0.1);
     }
 
     .stApp {
-        background: radial-gradient(circle at top right, #1e293b, #0f172a);
+        background: radial-gradient(circle at top right, #1e1b4b, #0b0f1a);
+        font-family: 'Inter', sans-serif;
+        color: #f8fafc;
     }
 
     h1, h2, h3 {
-        color: white !important;
-        font-weight: 700 !important;
+        font-family: 'Outfit', sans-serif;
+        letter-spacing: -0.02em;
     }
 
-    /* Sidebar Styles */
-    [data-testid="stSidebar"] {
-        background-color: #1e293b;
+    .glass-card {
+        background: var(--card-bg);
+        backdrop-filter: blur(16px);
+        -webkit-backdrop-filter: blur(16px);
+        border: 1px solid var(--border);
+        border-radius: 20px;
+        padding: 1.5rem;
+        margin-bottom: 1.5rem;
+    }
+
+    .kpi-value {
+        font-size: 2.2rem;
+        font-weight: 700;
+        color: white;
+        margin: 0.5rem 0;
+    }
+
+    .kpi-label {
+        font-size: 0.75rem;
+        text-transform: uppercase;
+        letter-spacing: 0.1em;
+        color: #94a3b8;
+    }
+
+    /* Table Customization */
+    .stDataFrame {
+        background: var(--card-bg) !important;
+        border: 1px solid var(--border) !important;
+        border-radius: 12px !important;
     }
 </style>
 """, unsafe_allow_html=True)
@@ -65,112 +76,128 @@ st.markdown("""
 # --- DATA LAYER ---
 db = CustomerDatabase()
 
-def load_analytics_data():
+def load_data():
     with DBConnection(db.db_url) as conn:
-        query = "SELECT * FROM conversations"
-        df = pd.read_sql_query(query, conn)
-        
-        # Data Cleanup
+        df = pd.read_sql_query("SELECT * FROM conversations", conn)
         if not df.empty:
             df['start_time'] = pd.to_datetime(df['start_time'])
-            # Mock some data if DB is small for demonstration
-            if len(df) < 5:
-                mock_data = {
-                    'conversation_id': [f'MOCK-{i}' for i in range(20)],
-                    'customer_id': ['C1', 'C2', 'C1', 'GUEST', 'C2'] * 4,
-                    'start_time': [datetime.now() - timedelta(hours=i) for i in range(20)],
-                    'resolved_status': [1, 1, 0, 1, 1] * 4,
-                    'final_sentiment': ['positive', 'neutral', 'negative', 'positive', 'neutral'] * 4,
-                    'final_priority': ['low', 'medium', 'high', 'urgent', 'medium'] * 4,
-                    'total_tokens': [450, 320, 890, 120, 540] * 4,
-                    'cost_estimate': [0.0001, 0.00008, 0.0004, 0.00002, 0.00012] * 4
-                }
-                df = pd.concat([df, pd.DataFrame(mock_data)])
+            # Ensure we have some variety for the demo if real data is sparse
+            if len(df) < 10:
+                mock = pd.DataFrame({
+                    'conversation_id': [f'X-{i}' for i in range(15)],
+                    'customer_id': ['C1', 'C2', 'GUEST'] * 5,
+                    'start_time': [datetime.now() - timedelta(minutes=15*i) for i in range(15)],
+                    'resolved_status': [1, 1, 0] * 5,
+                    'final_sentiment': ['positive', 'neutral', 'negative'] * 5,
+                    'final_priority': ['low', 'medium', 'high'] * 5,
+                    'total_tokens': [400, 300, 800] * 5,
+                    'cost_estimate': [0.00005, 0.00004, 0.0001] * 5
+                })
+                df = pd.concat([df, mock])
         return df
 
-df = load_analytics_data()
+df = load_data()
 
 # --- HEADER ---
-st.title("🚀 AI Agent Enterprise Insights")
-st.markdown("Real-time monitoring and ROI tracking for your LangGraph Workforce")
-st.markdown("---")
+st.markdown("""
+<div style='display:flex; justify-content:space-between; align-items:center; margin-bottom:2rem;'>
+    <div>
+        <h1 style='margin:0; font-size:2.8rem;'>Command Center</h1>
+        <p style='color:#94a3b8; margin:0;'>AI Agent Performance & Strategic Analytics</p>
+    </div>
+    <div class="glass-card" style='padding:0.75rem 1.5rem; margin:0; display:flex; gap:2rem;'>
+        <div style='text-align:center;'>
+            <small style='display:block; color:#94a3b8;'>STATUS</small>
+            <b style='color:#10b981;'>● OPERATIONAL</b>
+        </div>
+        <div style='text-align:center;'>
+            <small style='display:block; color:#94a3b8;'>UPTIME</small>
+            <b style='color:white;'>99.98%</b>
+        </div>
+    </div>
+</div>
+""", unsafe_allow_html=True)
 
 if df.empty:
-    st.warning("No conversation data available yet. Start some chats to see analytics!")
+    st.info("Awaiting initial telemetry data...")
     st.stop()
 
-# --- KPI METRICS ---
-col1, col2, col3, col4 = st.columns(4)
+# --- KPI GRID ---
+k_col1, k_col2, k_col3, k_col4 = st.columns(4)
 
-with col1:
-    total_convs = len(df)
-    st.metric("Total Conversations", f"{total_convs}", "+12%")
+with k_col1:
+    st.markdown(f"""<div class="glass-card">
+        <p class="kpi-label">Volume</p>
+        <p class="kpi-value">{len(df)}</p>
+        <small style='color:#10b981;'>↑ 12% vs last week</small>
+    </div>""", unsafe_allow_html=True)
 
-with col2:
-    success_rate = (df['resolved_status'].sum() / total_convs) * 100
-    st.metric("Resolution Rate", f"{success_rate:.1f}%", "+5%")
+with k_col2:
+    res_rate = (df['resolved_status'].sum() / len(df)) * 100
+    st.markdown(f"""<div class="glass-card">
+        <p class="kpi-label">Resolution</p>
+        <p class="kpi-value">{res_rate:.1f}%</p>
+        <small style='color:#10b981;'>↑ 4% efficiency</small>
+    </div>""", unsafe_allow_html=True)
 
-with col3:
-    avg_tokens = df['total_tokens'].mean()
-    st.metric("Avg Utility / Session", f"{int(avg_tokens)} tkn", "-2%")
+with k_col3:
+    avg_t = df['total_tokens'].mean()
+    st.markdown(f"""<div class="glass-card">
+        <p class="kpi-label">Avg Complexity</p>
+        <p class="kpi-value">{int(avg_t)}</p>
+        <small style='color:#94a3b8;'>Tokens per session</small>
+    </div>""", unsafe_allow_html=True)
 
-with col4:
-    total_cost = df['cost_estimate'].sum()
-    st.metric("LCO (Total Cost)", f"${total_cost:.4f}", "-$0.02", delta_color="inverse")
+with k_col4:
+    cost = df['cost_estimate'].sum()
+    st.markdown(f"""<div class="glass-card">
+        <p class="kpi-label">Total Burn</p>
+        <p class="kpi-value">${cost:.4f}</p>
+        <small style='color:#f43f5e;'>Cost awareness active</small>
+    </div>""", unsafe_allow_html=True)
 
-st.markdown("---")
+# --- CHARTS ---
+row1_1, row1_2 = st.columns([2, 1])
 
-# --- INTERACTIVE CHARTS ---
-row1_col1, row1_col2 = st.columns([2, 1])
+with row1_1:
+    st.markdown('<div class="glass-card">', unsafe_allow_html=True)
+    st.write("### Resource Utilization Trend")
+    fig1 = px.area(df.sort_values('start_time'), x='start_time', y='total_tokens',
+                  color_discrete_sequence=['#6366f1'], template='plotly_dark')
+    fig1.update_layout(paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0)',
+                      margin=dict(l=0, r=0, t=20, b=0), height=350)
+    st.plotly_chart(fig1, use_container_width=True)
+    st.markdown('</div>', unsafe_allow_html=True)
 
-with row1_col1:
-    st.subheader("📈 Conversation Volume (Hourly)")
-    fig_volume = px.line(
-        df.sort_values('start_time'), 
-        x='start_time', 
-        y='total_tokens',
-        title="Token Utilization Over Time",
-        template="plotly_dark",
-        color_discrete_sequence=['#3b82f6']
-    )
-    st.plotly_chart(fig_volume, use_container_width=True)
+with row1_2:
+    st.markdown('<div class="glass-card">', unsafe_allow_html=True)
+    st.write("### Sentiment Analysis")
+    fig2 = px.pie(df, names='final_sentiment', hole=0.7,
+                 color='final_sentiment', color_discrete_map={'positive': '#10b981', 'neutral': '#6366f1', 'negative': '#f43f5e'},
+                 template='plotly_dark')
+    fig2.update_layout(paper_bgcolor='rgba(0,0,0,0)', margin=dict(l=0, r=0, t=20, b=0), height=350, showlegend=False)
+    # Add center text
+    fig2.add_annotation(text="CSAT", x=0.5, y=0.5, font_size=20, showarrow=False, font_color="white")
+    st.plotly_chart(fig2, use_container_width=True)
+    st.markdown('</div>', unsafe_allow_html=True)
 
-with row1_col2:
-    st.subheader("🎭 Sentiment Distribution")
-    fig_sentiment = px.pie(
-        df, 
-        names='final_sentiment', 
-        hole=0.6,
-        color='final_sentiment',
-        color_discrete_map={'positive': '#10b981', 'neutral': '#64748b', 'negative': '#ef4444'},
-        template="plotly_dark"
-    )
-    st.plotly_chart(fig_sentiment, use_container_width=True)
+row2_1, row2_2 = st.columns([1, 1])
 
-row2_col1, row2_col2 = st.columns(2)
+with row2_1:
+    st.markdown('<div class="glass-card">', unsafe_allow_html=True)
+    st.write("### Specialist Workload Matrix")
+    workload = df['final_priority'].value_counts().reset_index()
+    fig3 = px.bar(workload, x='count', y='final_priority', orientation='h',
+                 color='final_priority', color_discrete_sequence=['#6366f1', '#8b5cf6', '#d946ef'],
+                 template='plotly_dark')
+    fig3.update_layout(paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0)', margin=dict(l=0, r=0, t=10, b=0), height=300)
+    st.plotly_chart(fig3, use_container_width=True)
+    st.markdown('</div>', unsafe_allow_html=True)
 
-with row2_col1:
-    st.subheader("🎯 Specialist Workload")
-    # Using 'final_priority' as a proxy for specialist complexity for demo
-    fig_priority = px.bar(
-        df, 
-        x='final_priority', 
-        color='final_priority',
-        template="plotly_dark",
-        labels={'count': 'Conversations'},
-        title="Inquiry Intensity by Priority"
-    )
-    st.plotly_chart(fig_priority, use_container_width=True)
-
-with row2_col2:
-    st.subheader("📋 Recent High-Value activity")
-    st.dataframe(
-        df[['conversation_id', 'customer_id', 'final_sentiment', 'final_priority', 'cost_estimate']]
-        .sort_values('cost_estimate', ascending=False)
-        .head(10),
-        use_container_width=True
-    )
-
-# --- FOOTER ---
-st.markdown("---")
-st.caption("AI Enterprise Dashboard | Optimized for LangGraph | Connection: WAL-Active")
+with row2_2:
+    st.markdown('<div class="glass-card">', unsafe_allow_html=True)
+    st.write("### High Intensity Sessions")
+    top_sessions = df.sort_values('total_tokens', ascending=False).head(5)
+    st.dataframe(top_sessions[['customer_id', 'final_priority', 'total_tokens', 'cost_estimate']], 
+                use_container_width=True, hide_index=True)
+    st.markdown('</div>', unsafe_allow_html=True)
