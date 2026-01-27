@@ -119,9 +119,9 @@ class CustomerSupportAgent:
             }
         )
         
-        # Return to supervisor for any follow-up
+        # Specialists should END the turn to wait for user input
         for agent in ["order_agent", "tech_agent", "billing_agent", "general_agent"]:
-            workflow.add_edge(agent, "supervisor")
+            workflow.add_edge(agent, END)
             
         workflow.add_edge("escalate", END)
         
@@ -152,17 +152,20 @@ class CustomerSupportAgent:
         # UX: If human takeover is active, immediately end AI involvement
         if state.get("is_human_takeover"): return {**state, "active_agent": "end"}
         
-        # Context Management: Trim messages before sending to LLM
-        trimmed_messages = self._trim_messages(state["messages"])
+        # Identify messages
+        messages = state["messages"]
+        last_message = messages[-1]
         
-        if isinstance(trimmed_messages[-1], AIMessage) and "help you today" in trimmed_messages[-1].content:
+        # Safety: If we just spoke, wait for user
+        if isinstance(last_message, AIMessage):
             return {**state, "active_agent": "end"}
             
-        prompt = f"Supervisor: Decide specialist based on: {trimmed_messages[-1].content}"
+        prompt = f"Supervisor: Decide specialist based on: {last_message.content}"
         try:
             decision = self.router_chain.invoke(prompt)
             return {**state, "active_agent": decision.next_agent}
-        except:
+        except Exception as e:
+            logger.error(f"Routing error: {e}")
             return {**state, "active_agent": "general_support"}
 
     def _order_agent_node(self, state: CustomerSupportState) -> CustomerSupportState:
